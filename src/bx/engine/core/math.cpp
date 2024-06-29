@@ -80,7 +80,7 @@ void Vec2::Set(f32 x, f32 y)
 	data[1] = y;
 }
 
-Vec2 Vec2::Plus(const f32& rhs) const
+Vec2 Vec2::PlusElement(f32 rhs) const
 {
 	return Vec2(x + rhs, y + rhs);
 }
@@ -95,7 +95,7 @@ Vec2 Vec2::Negate() const
 	return Vec2(-x, -y);
 }
 
-Vec2 Vec2::Minus(const f32& rhs) const
+Vec2 Vec2::MinusElement(f32 rhs) const
 {
 	return Vec2(x - rhs, y - rhs);
 }
@@ -105,7 +105,7 @@ Vec2 Vec2::Minus(const Vec2& rhs) const
 	return Vec2(x - rhs.x, y - rhs.y);
 }
 
-Vec2 Vec2::Mul(const f32& rhs) const
+Vec2 Vec2::MulElement(f32 rhs) const
 {
 	return Vec2(x * rhs, y * rhs);
 }
@@ -115,7 +115,7 @@ Vec2 Vec2::Mul(const Vec2& rhs) const
 	return Vec2(x * rhs.x, y * rhs.y);
 }
 
-Vec2 Vec2::Div(const f32& rhs) const
+Vec2 Vec2::DivElement(f32 rhs) const
 {
 	f32 invRhs = 1.0 / rhs;
 	return Vec2(x * invRhs, y * invRhs);
@@ -184,7 +184,7 @@ void Vec3::Set(f32 x, f32 y, f32 z)
 	data[2] = z;
 }
 
-Vec3 Vec3::Plus(const f32& rhs) const
+Vec3 Vec3::PlusElement(f32 rhs) const
 {
 	return Vec3(x + rhs, y + rhs, z + rhs);
 }
@@ -199,7 +199,7 @@ Vec3 Vec3::Negate() const
 	return Vec3(-x, -y, -z);
 }
 
-Vec3 Vec3::Minus(const f32& rhs) const
+Vec3 Vec3::MinusElement(f32 rhs) const
 {
 	return Vec3(x - rhs, y - rhs, z - rhs);
 }
@@ -209,7 +209,7 @@ Vec3 Vec3::Minus(const Vec3& rhs) const
 	return Vec3(x - rhs.x, y - rhs.y, z - rhs.z);
 }
 
-Vec3 Vec3::Mul(const f32& rhs) const
+Vec3 Vec3::MulElement(f32 rhs) const
 {
 	return Vec3(x * rhs, y * rhs, z * rhs);
 }
@@ -219,7 +219,7 @@ Vec3 Vec3::Mul(const Vec3& rhs) const
 	return Vec3(x * rhs.x, y * rhs.y, z * rhs.z);
 }
 
-Vec3 Vec3::Div(const f32& rhs) const
+Vec3 Vec3::DivElement(f32 rhs) const
 {
 	f32 invRhs = 1.0 / rhs;
 	return Vec3(x * invRhs, y * invRhs, z * invRhs);
@@ -235,12 +235,17 @@ f32 Vec3::Dot(const Vec3& a, const Vec3& b)
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
+Vec3 Vec3::Lerp(const Vec3& a, const Vec3& b, f32 t)
+{
+	return Math::Lerp(a, b, t);
+}
+
 void Vec3::Normalize(Vec3& v)
 {
 	v = v.Normalized();
 }
 
-Vec3 Cross(const Vec3& a, const Vec3& b)
+Vec3 Vec3::Cross(const Vec3& a, const Vec3& b)
 {
 	return Vec3(
 		a.y * b.z - a.z * b.y,
@@ -298,7 +303,7 @@ void Vec4::Set(f32 x, f32 y, f32 z, f32 w)
 	data[3] = w;
 }
 
-Vec4 Vec4::Plus(const f32& rhs) const
+Vec4 Vec4::PlusElement(f32 rhs) const
 {
 	return Vec4(x + rhs, y + rhs, z + rhs, w + rhs);
 }
@@ -313,7 +318,7 @@ Vec4 Vec4::Negate() const
 	return Vec4(-x, -y, -z, -w);
 }
 
-Vec4 Vec4::Minus(const f32& rhs) const
+Vec4 Vec4::MinusElement(f32 rhs) const
 {
 	return Vec4(x - rhs, y - rhs, z - rhs, w - rhs);
 }
@@ -323,7 +328,7 @@ Vec4 Vec4::Minus(const Vec4& rhs) const
 	return Vec4(x - rhs.x, y - rhs.y, z - rhs.z, w - rhs.w);
 }
 
-Vec4 Vec4::Mul(const f32& rhs) const
+Vec4 Vec4::MulElement(f32 rhs) const
 {
 	return Vec4(x * rhs, y * rhs, z * rhs, w * rhs);
 }
@@ -333,7 +338,7 @@ Vec4 Vec4::Mul(const Vec4& rhs) const
 	return Vec4(x * rhs.x, y * rhs.y, z * rhs.z, w * rhs.w);
 }
 
-Vec4 Vec4::Div(const f32& rhs) const
+Vec4 Vec4::DivElement(f32 rhs) const
 {
 	f32 invRhs = 1.0 / rhs;
 	return Vec4(x * invRhs, y * invRhs, z * invRhs, w * invRhs);

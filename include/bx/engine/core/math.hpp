@@ -35,7 +35,7 @@ namespace Math
 	template <typename T>
 	static T Lerp(const T& a, const T& b, f32 t)
 	{
-		return a + t * (b - a);
+		return a + (b - a) * t;
 	}
 
 	template <typename T>
@@ -88,9 +88,9 @@ struct Vec2
 
 	void Set(f32 x, f32 y);
 
-	Vec2 Plus(const f32& rhs) const;
+	Vec2 PlusElement(f32 rhs) const;
 	Vec2 Plus(const Vec2& rhs) const;
-	inline Vec2 operator+(const f32& rhs) const { return Plus(rhs); }
+	inline Vec2 operator+(const f32& rhs) const { return PlusElement(rhs); }
 	inline Vec2& operator+=(const f32& rhs) { *this = *this + rhs; return *this; }
 	inline Vec2 operator+(const Vec2& rhs) const { return Plus(rhs); }
 	inline Vec2& operator+=(const Vec2& rhs) { *this = *this + rhs; return *this; }
@@ -98,32 +98,32 @@ struct Vec2
 	Vec2 Negate() const;
 	inline Vec2 operator-() const { return Negate(); }
 
-	Vec2 Minus(const f32& rhs) const;
+	Vec2 MinusElement(f32 rhs) const;
 	Vec2 Minus(const Vec2& rhs) const;
-	inline Vec2 operator-(const f32& rhs) const { return Minus(rhs); }
+	inline Vec2 operator-(const f32& rhs) const { return MinusElement(rhs); }
 	inline Vec2& operator-=(const f32& rhs) { *this = *this - rhs; return *this; }
 	inline Vec2 operator-(const Vec2& rhs) const { return Minus(rhs); }
 	inline Vec2& operator-=(const Vec2& rhs) { *this = *this - rhs; return *this; }
 
-	Vec2 Mul(const f32& rhs) const;
+	Vec2 MulElement(f32 rhs) const;
 	Vec2 Mul(const Vec2& rhs) const;
-	inline Vec2 operator*(const f32& rhs) const { return Mul(rhs); }
+	inline Vec2 operator*(const f32& rhs) const { return MulElement(rhs); }
 	inline Vec2& operator*=(const f32& rhs) { *this = *this * rhs; return *this; }
 	inline Vec2 operator*(const Vec2& rhs) const { return Mul(rhs); }
 	inline Vec2& operator*=(const Vec2& rhs) { *this = *this * rhs; return *this; }
 
-	Vec2 Div(const f32& rhs) const;
+	Vec2 DivElement(f32 rhs) const;
 	Vec2 Div(const Vec2& rhs) const;
-	inline Vec2 operator/(const f32& rhs) const { return Div(rhs); }
+	inline Vec2 operator/(const f32& rhs) const { return DivElement(rhs); }
 	inline Vec2& operator/=(const f32& rhs) { *this = *this / rhs; return *this; }
 	inline Vec2 operator/(const Vec2& rhs) const { return Div(rhs); }
 	inline Vec2& operator/=(const Vec2& rhs) { *this = *this / rhs; return *this; }
 
 	static Vec2 Splat(f32 x) { return Vec2(x, x); }
-	static constexpr const Vec2& Zero() { return Vec2(0, 0); }
-	static constexpr const Vec2& One() { return Vec2(1, 1); }
-	static constexpr const Vec2& Right() { return Vec2(1, 0); }
-	static constexpr const Vec2& Up() { return Vec2(0, 1); }
+	static Vec2 Zero() { return Vec2(0, 0); }
+	static Vec2 One() { return Vec2(1, 1); }
+	static Vec2 Right() { return Vec2(1, 0); }
+	static Vec2 Up() { return Vec2(0, 1); }
 
 	static f32 Dot(const Vec2& a, const Vec2& b);
 
@@ -156,9 +156,9 @@ struct Vec3
 
 	void Set(f32 x, f32 y, f32 z);
 
-	Vec3 Plus(const f32& rhs) const;
+	Vec3 PlusElement(f32 rhs) const;
 	Vec3 Plus(const Vec3& rhs) const;
-	inline Vec3 operator+(const f32& rhs) const { return Plus(rhs); }
+	inline Vec3 operator+(const f32& rhs) const { return PlusElement(rhs); }
 	inline Vec3& operator+=(const f32& rhs) { *this = *this + rhs; return *this; }
 	inline Vec3 operator+(const Vec3& rhs) const { return Plus(rhs); }
 	inline Vec3& operator+=(const Vec3& rhs) { *this = *this + rhs; return *this; }
@@ -166,35 +166,37 @@ struct Vec3
 	Vec3 Negate() const;
 	inline Vec3 operator-() const { return Negate(); }
 
-	Vec3 Minus(const f32& rhs) const;
+	Vec3 MinusElement(f32 rhs) const;
 	Vec3 Minus(const Vec3& rhs) const;
-	inline Vec3 operator-(const f32& rhs) const { return Minus(rhs); }
+	inline Vec3 operator-(const f32& rhs) const { return MinusElement(rhs); }
 	inline Vec3& operator-=(const f32& rhs) { *this = *this - rhs; return *this; }
 	inline Vec3 operator-(const Vec3& rhs) const { return Minus(rhs); }
 	inline Vec3& operator-=(const Vec3& rhs) { *this = *this - rhs; return *this; }
 
-	Vec3 Mul(const f32& rhs) const;
+	Vec3 MulElement(f32 rhs) const;
 	Vec3 Mul(const Vec3& rhs) const;
-	inline Vec3 operator*(const f32& rhs) const { return Mul(rhs); }
+	inline Vec3 operator*(const f32& rhs) const { return MulElement(rhs); }
 	inline Vec3& operator*=(const f32& rhs) { *this = *this * rhs; return *this; }
 	inline Vec3 operator*(const Vec3& rhs) const { return Mul(rhs); }
 	inline Vec3& operator*=(const Vec3& rhs) { *this = *this * rhs; return *this; }
 
-	Vec3 Div(const f32& rhs) const;
+	Vec3 DivElement(f32 rhs) const;
 	Vec3 Div(const Vec3& rhs) const;
-	inline Vec3 operator/(const f32& rhs) const { return Div(rhs); }
+	inline Vec3 operator/(const f32& rhs) const { return DivElement(rhs); }
 	inline Vec3& operator/=(const f32& rhs) { *this = *this / rhs; return *this; }
 	inline Vec3 operator/(const Vec3& rhs) const { return Div(rhs); }
 	inline Vec3& operator/=(const Vec3& rhs) { *this = *this / rhs; return *this; }
 
 	static Vec3 Splat(f32 x) { return Vec3(x, x, x); }
-	static constexpr const Vec3& Zero() { return Vec3(0, 0, 0); }
-	static constexpr const Vec3& One() { return Vec3(1, 1, 1); }
-	static constexpr const Vec3& Right() { return Vec3(1, 0, 0); }
-	static constexpr const Vec3& Up() { return Vec3(0, 1, 0); }
-	static constexpr const Vec3& Forward() { return Vec3(0, 0, 1); }
+	static Vec3 Zero() { return Vec3(0, 0, 0); }
+	static Vec3 One() { return Vec3(1, 1, 1); }
+	static Vec3 Right() { return Vec3(1, 0, 0); }
+	static Vec3 Up() { return Vec3(0, 1, 0); }
+	static Vec3 Forward() { return Vec3(0, 0, 1); }
 
 	static f32 Dot(const Vec3& a, const Vec3& b);
+	
+	static Vec3 Lerp(const Vec3& a, const Vec3& b, f32 t);
 
 	static void Normalize(Vec3& v);
 
@@ -227,9 +229,9 @@ struct Vec4
 
 	void Set(f32 x, f32 y, f32 z, f32 w);
 
-	Vec4 Plus(const f32& rhs) const;
+	Vec4 PlusElement(f32 rhs) const;
 	Vec4 Plus(const Vec4& rhs) const;
-	inline Vec4 operator+(const f32& rhs) const { return Plus(rhs); }
+	inline Vec4 operator+(const f32& rhs) const { return PlusElement(rhs); }
 	inline Vec4& operator+=(const f32& rhs) { *this = *this + rhs; return *this; }
 	inline Vec4 operator+(const Vec4& rhs) const { return Plus(rhs); }
 	inline Vec4& operator+=(const Vec4& rhs) { *this = *this + rhs; return *this; }
@@ -237,30 +239,30 @@ struct Vec4
 	Vec4 Negate() const;
 	inline Vec4 operator-() const { return Negate(); }
 
-	Vec4 Minus(const f32& rhs) const;
+	Vec4 MinusElement(f32 rhs) const;
 	Vec4 Minus(const Vec4& rhs) const;
-	inline Vec4 operator-(const f32& rhs) const { return Minus(rhs); }
+	inline Vec4 operator-(const f32& rhs) const { return MinusElement(rhs); }
 	inline Vec4& operator-=(const f32& rhs) { *this = *this - rhs; return *this; }
 	inline Vec4 operator-(const Vec4& rhs) const { return Minus(rhs); }
 	inline Vec4& operator-=(const Vec4& rhs) { *this = *this - rhs; return *this; }
 
-	Vec4 Mul(const f32& rhs) const;
+	Vec4 MulElement(f32 rhs) const;
 	Vec4 Mul(const Vec4& rhs) const;
-	inline Vec4 operator*(const f32& rhs) const { return Mul(rhs); }
+	inline Vec4 operator*(const f32& rhs) const { return MulElement(rhs); }
 	inline Vec4& operator*=(const f32& rhs) { *this = *this * rhs; return *this; }
 	inline Vec4 operator*(const Vec4& rhs) const { return Mul(rhs); }
 	inline Vec4& operator*=(const Vec4& rhs) { *this = *this * rhs; return *this; }
 
-	Vec4 Div(const f32& rhs) const;
+	Vec4 DivElement(f32 rhs) const;
 	Vec4 Div(const Vec4& rhs) const;
-	inline Vec4 operator/(const f32& rhs) const { return Div(rhs); }
+	inline Vec4 operator/(const f32& rhs) const { return DivElement(rhs); }
 	inline Vec4& operator/=(const f32& rhs) { *this = *this / rhs; return *this; }
 	inline Vec4 operator/(const Vec4& rhs) const { return Div(rhs); }
 	inline Vec4& operator/=(const Vec4& rhs) { *this = *this / rhs; return *this; }
 
 	static Vec4 Splat(f32 x) { return Vec4(x, x, x, x); }
-	static constexpr const Vec4& Zero() { return Vec4(0, 0, 0, 0); }
-	static constexpr const Vec4& One() { return Vec4(1, 1, 1, 1); }
+	static Vec4 Zero() { return Vec4(0, 0, 0, 0); }
+	static Vec4 One() { return Vec4(1, 1, 1, 1); }
 
 	static f32 Dot(const Vec4& a, const Vec4& b);
 
@@ -282,16 +284,16 @@ struct Color
 		struct { f32 r, g, b, a; };
 	};
 
-	static constexpr const Color& Black() { return Color(0, 0, 0, 1); }
-	static constexpr const Color& Blue() { return Color(0, 0, 1, 1); }
-	static constexpr const Color& Cyan() { return Color(0, 1, 1, 1); }
-	static constexpr const Color& Gray() { return Color(0.5, 0.5, 0.5, 1); }
-	static constexpr const Color& Green() { return Color(0, 1, 0, 1); }
-	static constexpr const Color& Magenta() { return Color(1, 0, 1, 1); }
-	static constexpr const Color& Red() { return Color(1, 0, 0, 1); }
-	static constexpr const Color& Transparent() { return Color(0, 0, 0, 0); }
-	static constexpr const Color& White() { return Color(1, 1, 1, 1); }
-	static constexpr const Color& Yellow() { return Color(1, 1, 0, 1); }
+	static Color Black() { return Color(0, 0, 0, 1); }
+	static Color Blue() { return Color(0, 0, 1, 1); }
+	static Color Cyan() { return Color(0, 1, 1, 1); }
+	static Color Gray() { return Color(0.5, 0.5, 0.5, 1); }
+	static Color Green() { return Color(0, 1, 0, 1); }
+	static Color Magenta() { return Color(1, 0, 1, 1); }
+	static Color Red() { return Color(1, 0, 0, 1); }
+	static Color Transparent() { return Color(0, 0, 0, 0); }
+	static Color White() { return Color(1, 1, 1, 1); }
+	static Color Yellow() { return Color(1, 1, 0, 1); }
 
 	f32 At(i32 i) const;
 	inline f32& operator[](i32 i) { return data[i]; }
