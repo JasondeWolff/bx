@@ -558,30 +558,189 @@ Quat Quat::FromValuePtr(f32* vptr)
 	return q;
 }
 
+f32 Mat4::At(i32 i) const
+{
+	return data[i];
+}
+
+f32 Mat4::At(i32 i, i32 j) const
+{
+	return columns[i][j];
+}
+
 Mat4 Mat4::Mul(const Mat4& rhs) const
 {
-	glm::mat4 l = glm::make_mat4(data);
-	glm::mat4 r = glm::make_mat4(rhs.data);
-	glm::mat4 m = l * r;
-	return Mat4::FromValuePtr(glm::value_ptr(m));
+	Mat4 result;
+	for (u32 y = 0; y < 4; y++)
+	{
+		for (u32 x = 0; x < 4; x++)
+		{
+			f64 sum = 0.0;
+			for (u32 e = 0; e < 4; e++)
+				sum += data[x + e * 4] * rhs[e + y * 4];
+			result[x + y * 4] = sum;
+		}
+	}
+	return result;
+}
+
+Vec4 Mat4::MulVec4(const Vec4& rhs) const
+{
+	return Vec4(this->columns[0].x * rhs.x + this->columns[1].x * rhs.y +
+					this->columns[2].x * rhs.z + this->columns[3].x * rhs.w,
+				this->columns[0].y * rhs.x + this->columns[1].y * rhs.y +
+					this->columns[2].y * rhs.z + this->columns[3].y * rhs.w,
+				this->columns[0].z * rhs.x + this->columns[1].z * rhs.y +
+					this->columns[2].z * rhs.z + this->columns[3].z * rhs.w,
+				this->columns[0].w * rhs.x + this->columns[1].w * rhs.y +
+					this->columns[2].w * rhs.z + this->columns[3].w * rhs.w);
+}
+
+Mat4 Mat4::Transpose() const
+{
+	Mat4 result;
+	for (i32 i = 0; i < 4; i++)
+	{
+		for (i32 j = 0; j < 4; j++)
+		{
+			result(i, j) = this->At(j, i);
+		}
+	}
+	return result;
 }
 
 Mat4 Mat4::Inverse() const
 {
-	glm::mat4 m = glm::make_mat4(data);
-	glm::mat4 im = glm::inverse(m);
-	return Mat4::FromValuePtr(glm::value_ptr(im));
+	const f32 inv[16] = { data[5] * data[10] * data[15] -
+								data[5] * data[11] * data[14] -
+								data[9] * data[6] * data[15] +
+								data[9] * data[7] * data[14] +
+								data[13] * data[6] * data[11] -
+								data[13] * data[7] * data[10],
+							-data[1] * data[10] * data[15] +
+								data[1] * data[11] * data[14] +
+								data[9] * data[2] * data[15] -
+								data[9] * data[3] * data[14] -
+								data[13] * data[2] * data[11] +
+								data[13] * data[3] * data[10],
+							data[1] * data[6] * data[15] -
+								data[1] * data[7] * data[14] -
+								data[5] * data[2] * data[15] +
+								data[5] * data[3] * data[14] +
+								data[13] * data[2] * data[7] -
+								data[13] * data[3] * data[6],
+							-data[1] * data[6] * data[11] +
+								data[1] * data[7] * data[10] +
+								data[5] * data[2] * data[11] -
+								data[5] * data[3] * data[10] -
+								data[9] * data[2] * data[7] +
+								data[9] * data[3] * data[6],
+							-data[4] * data[10] * data[15] +
+								data[4] * data[11] * data[14] +
+								data[8] * data[6] * data[15] -
+								data[8] * data[7] * data[14] -
+								data[12] * data[6] * data[11] +
+								data[12] * data[7] * data[10],
+							data[0] * data[10] * data[15] -
+								data[0] * data[11] * data[14] -
+								data[8] * data[2] * data[15] +
+								data[8] * data[3] * data[14] +
+								data[12] * data[2] * data[11] -
+								data[12] * data[3] * data[10],
+							-data[0] * data[6] * data[15] +
+								data[0] * data[7] * data[14] +
+								data[4] * data[2] * data[15] -
+								data[4] * data[3] * data[14] -
+								data[12] * data[2] * data[7] +
+								data[12] * data[3] * data[6],
+							data[0] * data[6] * data[11] -
+								data[0] * data[7] * data[10] -
+								data[4] * data[2] * data[11] +
+								data[4] * data[3] * data[10] +
+								data[8] * data[2] * data[7] -
+								data[8] * data[3] * data[6],
+							data[4] * data[9] * data[15] -
+								data[4] * data[11] * data[13] -
+								data[8] * data[5] * data[15] +
+								data[8] * data[7] * data[13] +
+								data[12] * data[5] * data[11] -
+								data[12] * data[7] * data[9],
+							-data[0] * data[9] * data[15] +
+								data[0] * data[11] * data[13] +
+								data[8] * data[1] * data[15] -
+								data[8] * data[3] * data[13] -
+								data[12] * data[1] * data[11] +
+								data[12] * data[3] * data[9],
+							data[0] * data[5] * data[15] -
+								data[0] * data[7] * data[13] -
+								data[4] * data[1] * data[15] +
+								data[4] * data[3] * data[13] +
+								data[12] * data[1] * data[7] -
+								data[12] * data[3] * data[5],
+							-data[0] * data[5] * data[11] +
+								data[0] * data[7] * data[9] +
+								data[4] * data[1] * data[11] -
+								data[4] * data[3] * data[9] -
+								data[8] * data[1] * data[7] +
+								data[8] * data[3] * data[5],
+							-data[4] * data[9] * data[14] +
+								data[4] * data[10] * data[13] +
+								data[8] * data[5] * data[14] -
+								data[8] * data[6] * data[13] -
+								data[12] * data[5] * data[10] +
+								data[12] * data[6] * data[9],
+							data[0] * data[9] * data[14] -
+								data[0] * data[10] * data[13] -
+								data[8] * data[1] * data[14] +
+								data[8] * data[2] * data[13] +
+								data[12] * data[1] * data[10] -
+								data[12] * data[2] * data[9],
+							-data[0] * data[5] * data[14] +
+								data[0] * data[6] * data[13] +
+								data[4] * data[1] * data[14] -
+								data[4] * data[2] * data[13] -
+								data[12] * data[1] * data[6] +
+								data[12] * data[2] * data[5],
+							data[0] * data[5] * data[10] -
+								data[0] * data[6] * data[9] -
+								data[4] * data[1] * data[10] +
+								data[4] * data[2] * data[9] +
+								data[8] * data[1] * data[6] -
+								data[8] * data[2] * data[5] };
+
+	Mat4 result = *this;
+	const f32 det = data[0] * inv[0] + data[1] * inv[4] +
+		data[2] * inv[8] + data[3] * inv[12];
+	if (det != 0.0)
+	{
+		const f32 invdet = 1.0 / det;
+		for (u32 i = 0; i < 16; i++)
+		{
+			result[i] = inv[i] * invdet;
+		}
+	}
+	return result;
 }
 
 Mat4 Mat4::Identity()
 {
-	static Mat4 s_identity = Mat4(Vec4(1, 0, 0, 0), Vec4(0, 1, 0, 0), Vec4(0, 0, 1, 0), Vec4(0, 0, 0, 1));
+	static Mat4 s_identity = Mat4(
+		Vec4(1, 0, 0, 0),
+		Vec4(0, 1, 0, 0),
+		Vec4(0, 0, 1, 0),
+		Vec4(0, 0, 0, 1)
+	);
 	return s_identity;
 }
 
 Mat4 Mat4::Zero()
 {
-	return Mat4(Vec4(0, 0, 0, 0), Vec4(0, 0, 0, 0), Vec4(0, 0, 0, 0), Vec4(0, 0, 0, 0));
+	return Mat4(
+		Vec4(0, 0, 0, 0),
+		Vec4(0, 0, 0, 0),
+		Vec4(0, 0, 0, 0),
+		Vec4(0, 0, 0, 0)
+	);
 }
 
 Mat4 Mat4::LookAt(const Vec3& eye, const Vec3& center, const Vec3& up)

@@ -413,30 +413,29 @@ struct Quat
 struct Mat4
 {
 	Mat4() : data{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 } {}
-	Mat4(Vec4 x, Vec4 y, Vec4 z, Vec4 w)
-		: basis{ x, y, z, w }
+	Mat4(const Vec4& x, const Vec4& y, const Vec4& z, const Vec4& w)
+		: columns{ x, y, z, w }
 	{}
 
 	union
 	{
 		f32 data[16];
-		Vec4 basis[4];
-		//f32 m00, m01, m02, m03,
-		//	m10, m11, m12, m13,
-		//	m20, m21, m22, m23,
-		//	m30, m31, m32, m33;
+		Vec4 columns[4];
 	};
 
-	//Vec4 At(i32 i);
-	inline Vec4& operator[](i32 i) { return basis[i]; }
-	inline const Vec4& operator[](i32 i) const { return basis[i]; }
-
-	//f32 At(i32 i, i32 j);
-	//inline f32 operator[](i32 i, i32 j) { return At(i, j); }
+	f32 At(i32 i) const;
+	f32 At(i32 i, i32 j) const;
+	inline f32& operator[](i32 i) { return data[i]; }
+	inline const f32& operator[](i32 i) const { return data[i]; }
+	f32& operator()(u32 i, u32 j) { return columns[i][j]; }
+	const f32& operator()(u32 i, u32 j) const { return columns[i][j]; }
 
 	Mat4 Mul(const Mat4& rhs) const;
+	Vec4 MulVec4(const Vec4& rhs) const;
 	inline Mat4 operator*(const Mat4& rhs) const { return Mul(rhs); }
+	inline Vec4 operator*(const Vec4& rhs) const { return MulVec4(rhs); }
 
+	Mat4 Transpose() const;
 	Mat4 Inverse() const;
 
 	static Mat4 Identity();
