@@ -551,6 +551,32 @@ Quat Quat::Slerp(const Quat& a, const Quat& b, f32 t)
 	}
 }
 
+Quat Quat::FromMat4(const Mat4& _matrix)
+{
+	Mat4 matrix = _matrix.Transpose();
+	f32 tr = matrix[0] + matrix[5] + matrix[10];
+	if (tr > 0) {
+		f32 S = sqrtf(tr + 1.0) * 2.0;
+		return Quat((matrix(2, 1) - matrix(1, 2)) / S, (matrix(0, 2) - matrix(2, 0)) / S,
+			(matrix(1, 0) - matrix(0, 1)) / S, 0.25 * S);
+	}
+	else if (matrix(0, 0) > matrix(1, 1) && matrix(0, 0) > matrix(2, 2)) {
+		f32 S = sqrtf(1.0 + matrix(0, 0) - matrix(1, 1) - matrix(2, 2)) * 2.0;
+		return Quat(0.25 * S, (matrix(0, 1) + matrix(1, 0)) / S,
+			(matrix(0, 2) + matrix(2, 0)) / S, (matrix(2, 1) - matrix(1, 2)) / S);
+	}
+	else if (matrix(1, 1) > matrix(2, 2)) {
+		f32 S = sqrtf(1.0 + matrix(1, 1) - matrix(0, 0) - matrix(2, 2)) * 2.0;
+		return Quat((matrix(0, 1) + matrix(1, 0)) / S, 0.25 * S,
+			(matrix(1, 2) + matrix(2, 1)) / S, (matrix(0, 2) - matrix(2, 0)) / S);
+	}
+	else {
+		f32 S = sqrtf(1.0 + matrix(2, 2) - matrix(0, 0) - matrix(1, 1)) * 2.0;
+		return Quat((matrix(0, 2) + matrix(2, 0)) / S,
+			(matrix(1, 2) + matrix(2, 1)) / S, 0.25 * S, (matrix(1, 0) - matrix(0, 1)) / S);
+	}
+}
+
 Quat Quat::FromValuePtr(f32* vptr)
 {
 	Quat q;
@@ -754,63 +780,91 @@ Mat4 Mat4::LookAt(const Vec3& eye, const Vec3& center, const Vec3& up)
 
 Mat4 Mat4::Ortho(f32 left, f32 right, f32 bottom, f32 top, f32 zNear, f32 zFar)
 {
-	glm::mat4 m = glm::ortho(left, right, bottom, top, zNear, zFar);
-	return Mat4::FromValuePtr(glm::value_ptr(m));
+	Mat4 result = Mat4::Identity();
+	result(0, 0) = 2.0 / (right - left);
+	result(1, 1) = 2.0 / (top - bottom);
+	result(2, 2) = -2.0 / (zFar - zNear);
+	result(3, 0) = (left + right) / (right - left);
+	result(3, 1) = (bottom + top) / (top - bottom);
+	result(3, 2) = -(zFar + zNear) / (zFar - zNear);
+	return result;
 }
 
 Mat4 Mat4::Perspective(f32 fov, f32 aspect, f32 zNear, f32 zFar)
 {
-	glm::mat4 m = glm::perspective(glm::radians(fov), aspect, zNear, zFar);
-	return Mat4::FromValuePtr(glm::value_ptr(m));
+	Mat4 result = Mat4::Identity();
+	f32 q = 1.0 / tanf(Math::Radians(0.5 * fov));
+	f32 a = q / aspect;
+	f32 b = (zNear + zFar) / (zNear - zFar);
+	f32 c = (2.0f * zNear * zFar) / (zNear - zFar);
+	result(0, 0) = a;
+	result(1, 1) = q;
+	result(2, 2) = b;
+	result(2, 3) = -1.0;
+	result(3, 2) = c;
+	return result;
 }
 
-Mat4 Mat4::TRS(const Vec3& pos, const Quat& rot, const Vec3& scl)
+Mat4 Mat4::Translation(const Vec3& translation)
 {
-	/* This creates a mat4 directly from pos, euler, scale
-	r = rad(r)
-		var cr = r.map { |n| n.cos }.toList
-		var sr = r.map { |n| n.sin }.toList
-
-		return [s[0] * ( cr[1] * cr[2]),    s[1] * (sr[0] * sr[1] * cr[2] - cr[0] * sr[2]),     s[2] * (cr[0] * sr[1] * cr[2] + sr[0] * sr[2]),     0,
-				s[0] * ( cr[1] * sr[2]),    s[1] * (sr[0] * sr[1] * sr[2] + cr[0] * cr[2]),     s[2] * (cr[0] * sr[1] * sr[2] - sr[0] * cr[2]),     0,
-				s[0] * (-sr[1]),            s[1] * (sr[0] * cr[1]),                             s[2] * (cr[0] * cr[1]),                             0,
-				p[0],                       p[1],                                               p[2],                                               1]
-	*/
-
-	glm::vec3 p = glm::make_vec3(pos.data);
-	glm::quat r = QuatToGLM(rot);
-	glm::vec3 s = glm::make_vec3(scl.data);
-	glm::mat4 m = glm::translate(glm::mat4(1.0f), p) * glm::mat4(r) * glm::scale(glm::mat4(1.0f), s);
-	return Mat4::FromValuePtr(glm::value_ptr(m));
+	Mat4 result = Mat4::Identity();
+	result(3, 0) = translation.x;
+	result(3, 1) = translation.y;
+	result(3, 2) = translation.z;
+	return result;
 }
 
-Mat4 Mat4::Translate(const Vec3& translation, const Mat4& mat)
+Mat4 Mat4::Rotation(f32 angle, const Vec3& axis)
 {
-	glm::vec3 t = glm::make_vec3(translation.data);
-	glm::mat4 m = glm::make_mat4(mat.data);
-	glm::mat4 tm = glm::translate(m, t);
-	return Mat4::FromValuePtr(glm::value_ptr(tm));
+	Mat4 result = Mat4::Identity();
+	f32 r = Math::Radians(angle);
+	f32 c = cosf(r);
+	f32 s = sinf(r);
+	f32 omc = 1.0 - c;
+	result(0, 0) = axis.x * omc + c;
+	result(0, 1) = axis.y * axis.x * omc + axis.z * s;
+	result(0, 2) = axis.z * axis.x * omc - axis.y * s;
+	result(1, 0) = axis.x * axis.y * omc - axis.z * s;
+	result(1, 1) = axis.y * omc + c;
+	result(1, 2) = axis.y * axis.z * omc + axis.x * s;
+	result(2, 0) = axis.x * axis.z * omc + axis.y * s;
+	result(2, 1) = axis.y * axis.z * omc - axis.x * s;
+	result(2, 2) = axis.z * omc + c;
+	return result;
 }
 
-Mat4 Mat4::Rotate(const Quat& rotation, const Mat4& mat)
+Mat4 Mat4::Rotation(const Quat& rotation)
 {
-	glm::quat r = QuatToGLM(rotation);
-	glm::mat4 m = glm::make_mat4(mat.data);
-	glm::mat4 rm = m * glm::mat4(r);
-	return Mat4::FromValuePtr(glm::value_ptr(rm));
+	Mat4 result = Mat4::Identity();
+	result[0] = 1.0 - 2.0 * rotation.y * rotation.y - 2.0 * rotation.z * rotation.z;
+	result[1] = 2.0 * rotation.x * rotation.y - 2.0 * rotation.w * rotation.z;
+	result[2] = 2.0 * rotation.x * rotation.z + 2.0 * rotation.w * rotation.y;
+	result[4] = 2.0 * rotation.x * rotation.y + 2.0 * rotation.w * rotation.z;
+	result[5] = 1.0 - 2.0 * rotation.x * rotation.x - 2.0 * rotation.z * rotation.z;
+	result[6] = 2.0 * rotation.y * rotation.z - 2.0 * rotation.w * rotation.x;
+	result[8] = 2.0 * rotation.x * rotation.z - 2.0 * rotation.w * rotation.y;
+	result[9] = 2.0 * rotation.y * rotation.z + 2.0 * rotation.w * rotation.x;
+	result[10] = 1.0 - 2.0 * rotation.x * rotation.x - 2.0 * rotation.y * rotation.y;
+	return result.Transpose();
 }
 
-Mat4 Mat4::Scale(const Vec3& scaling, const Mat4& mat)
+Mat4 Mat4::Scale(const Vec3& scale)
 {
-	glm::vec3 s = glm::make_vec3(scaling.data);
-	glm::mat4 m = glm::make_mat4(mat.data);
-	glm::mat4 sm = glm::scale(m, s);
-	return Mat4::FromValuePtr(glm::value_ptr(sm));
+	Mat4 result = Mat4::Identity();
+	result(0, 0) = scale.x;
+	result(1, 1) = scale.y;
+	result(2, 2) = scale.z;
+	return result;
 }
 
-void Mat4::Decompose(const Mat4& m, Vec3& pos, Quat& rot, Vec3& scl)
+Mat4 Mat4::TRS(const Vec3& translation, const Quat& rotation, const Vec3& scale)
 {
-	glm::mat4 transformation = glm::make_mat4(m.data);
+	return Mat4::Translation(translation) * Mat4::Rotation(rotation) * Mat4::Scale(scale);
+}
+
+void Mat4::Decompose(const Mat4& matrix, Vec3& pos, Quat& rot, Vec3& scl)
+{
+	glm::mat4 transformation = glm::make_mat4(matrix.data);
 	glm::vec3 scale;
 	glm::quat rotation;
 	glm::vec3 translation;
@@ -820,6 +874,14 @@ void Mat4::Decompose(const Mat4& m, Vec3& pos, Quat& rot, Vec3& scl)
 	pos = Vec3::FromValuePtr(glm::value_ptr(translation));
 	rot = QuatFromGLM(rotation);
 	scl = Vec3::FromValuePtr(glm::value_ptr(scale));
+
+	pos = Vec3(matrix.columns[3][0], matrix.columns[3][1], matrix.columns[3][2]);
+	rot = Quat::FromMat4(matrix);
+	scl = Vec3(
+		Vec3(matrix.columns[0][0], matrix.columns[0][1], matrix.columns[0][2]).Magnitude(),
+		Vec3(matrix.columns[1][0], matrix.columns[1][1], matrix.columns[1][2]).Magnitude(),
+		Vec3(matrix.columns[2][0], matrix.columns[2][1], matrix.columns[2][2]).Magnitude()
+	);
 }
 
 Mat4 Mat4::FromValuePtr(f32* vptr)

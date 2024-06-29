@@ -352,6 +352,7 @@ struct Vec4i
 	static Vec4i FromValuePtr(i32* v);
 };
 
+struct Mat4;
 struct Quat
 {
 	Quat() : data{ 0, 0, 0, 0 } {}
@@ -407,6 +408,7 @@ struct Quat
 
 	static Quat Slerp(const Quat& a, const Quat& b, f32 t);
 
+	static Quat FromMat4(const Mat4& matrix);
 	static Quat FromValuePtr(f32* v);
 };
 
@@ -442,15 +444,23 @@ struct Mat4
 	static Mat4 Zero();
 
 	static Mat4 LookAt(const Vec3& eye, const Vec3& target, const Vec3& up);
+
 	static Mat4 Ortho(f32 left, f32 right, f32 bottom, f32 top, f32 zNear, f32 zFar);
 	static Mat4 Perspective(f32 fov, f32 aspect, f32 zNear, f32 zFar);
-	static Mat4 TRS(const Vec3& pos, const Quat& q, const Vec3& s);
+	static Mat4 Translation(const Vec3& translation);
+	static Mat4 Rotation(f32 angle, const Vec3& axis);
+	static Mat4 Rotation(const Quat& rotation);
+	static Mat4 Scale(const Vec3& scale);
+	static Mat4 TRS(const Vec3& translation, const Quat& rotation, const Vec3& scale);
+
+
+	/*
 
 	static Mat4 Translate(const Vec3& translation, const Mat4& mat = Mat4::Identity());
 	static Mat4 Rotate(const Quat& rotation, const Mat4& mat = Mat4::Identity());
-	static Mat4 Scale(const Vec3& scaling, const Mat4& mat = Mat4::Identity());
+	static Mat4 Scale(const Vec3& scaling, const Mat4& mat = Mat4::Identity());*/
 
-	static void Decompose(const Mat4& m, Vec3& pos, Quat& rot, Vec3& scl);
+	static void Decompose(const Mat4& matrix, Vec3& translation, Quat& rotation, Vec3& scale);
 
 	static Mat4 FromValuePtr(f32* v);
 };
