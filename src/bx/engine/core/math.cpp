@@ -133,7 +133,7 @@ f32 Vec2::Dot(const Vec2& a, const Vec2& b)
 
 Vec2 Vec2::Lerp(const Vec2& a, const Vec2& b, f32 t)
 {
-	return Lerp(a, b, t);
+	return Math::Lerp(a, b, t);
 }
 
 void Vec2::Normalize(Vec2& v)
@@ -406,54 +406,149 @@ Quat Quat::Normalized() const
 	return QuatFromGLM(q);
 }
 
-Quat Quat::MulQuat(const Quat& rhs) const
+f32 Quat::SqrMagnitude() const
 {
-	glm::quat l = QuatToGLM(*this);
-	glm::quat r = QuatToGLM(rhs);
-	glm::quat q = l * r;
-	return QuatFromGLM(q);
+	return x * x + y * y + z * z + w * w;
 }
 
-Vec3 Quat::MulVec3(const Vec3& rhs) const
+f32 Quat::Magnitude() const
 {
-	glm::quat l = QuatToGLM(*this);
-	glm::vec3 r = glm::make_vec3(rhs.data);
-	glm::vec3 v = l * r;
-	return Vec3::FromValuePtr(glm::value_ptr(v));
-}
-
-Vec3 Quat::EulerAngles() const
-{
-	glm::quat q = QuatToGLM(*this);
-	glm::vec3 e = glm::degrees(glm::eulerAngles(q));
-	return Vec3::FromValuePtr(glm::value_ptr(e));
+	return sqrt(SqrMagnitude());
 }
 
 Quat Quat::Inverse() const
 {
-	glm::quat q = QuatToGLM(*this);
-	glm::quat iq = glm::inverse(q);
-	return QuatFromGLM(iq);
+	f32 magnitude = Magnitude();
+	if (magnitude > SAFE_DIV_EPSILON)
+	{
+		f32 invMagnitude = 1.0 / magnitude;
+		return Quat(
+			-x * invMagnitude,
+			-y * invMagnitude,
+			-z * invMagnitude,
+			-w * invMagnitude
+		);
+	}
+	else
+	{
+		return *this;
+	}
+}
+
+Quat Quat::PlusQuat(const Quat& rhs) const
+{
+	return Quat(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
+}
+
+Quat Quat::PlusF32(f32 rhs) const
+{
+	return Quat(x + rhs, y + rhs, z + rhs, w + rhs);
+}
+
+Quat Quat::Negate() const
+{
+	return Quat(-x, -y, -z, -w);
+}
+
+Quat Quat::MulQuat(const Quat& rhs) const
+{
+	return Quat(
+		w * rhs.x + x * rhs.w + y * rhs.z - z * rhs.y,
+		w * rhs.y - x * rhs.z + y * rhs.w + z * rhs.x,
+		w * rhs.z + x * rhs.y - y * rhs.x + z * rhs.w,
+		w * rhs.w - x * rhs.x - y * rhs.y - z * rhs.z
+	);
+}
+
+Vec3 Quat::MulVec3(const Vec3& rhs) const
+{
+	Vec3 qv(x, y, z);
+	Vec3 t = Vec3::Cross(qv, rhs) * 2.0;
+	return rhs + t * w + Vec3::Cross(qv, t);
+}
+
+Quat Quat::MulF32(f32 rhs) const
+{
+	return Quat(x * rhs, y * rhs, z * rhs, w * rhs);
+}
+
+Quat Quat::DivF32(f32 rhs) const
+{
+	f32 invRhs = 1.0 / rhs;
+	return Quat(x * invRhs, y * invRhs, z * invRhs, w * invRhs);
+}
+
+Vec3 Quat::EulerAngles() const
+{
+	Vec3 euler;
+	f32 sinrCosp = 2.0 * (w * x + y * z);
+	f32 cosrCosp = 1.0 - 2.0 * (x * x + y * y);
+	euler.x = Math::Degrees(std::atan2(sinrCosp, cosrCosp));
+	f32 sinp = 2.0 * (w * y - z * x);
+	if (std::abs(sinp) >= 1.0)
+		euler.y = Math::Degrees(std::copysignf(Math::PI_2, sinp));
+	else
+		euler.y = Math::Degrees(std::asin(sinp));
+	f32 sinyCosp = 2.0 * (w * z + x * y);
+	f32 cosyCosp = 1.0 - 2.0 * (y * y + z * z);
+	euler.z = Math::Degrees(std::atan2f(sinyCosp, cosyCosp));
+	return euler;
 }
 
 Quat Quat::Euler(f32 x, f32 y, f32 z)
 {
-	glm::quat q = glm::quat(glm::radians(glm::vec3(x, y, z)));
-	return QuatFromGLM(q);
+	Vec3 halfEuler = Vec3(x, y, z) * 0.5;
+	f32 cr = cosf(Math::Radians(halfEuler.x));
+	f32 sr = sinf(Math::Radians(halfEuler.x));
+	f32 cy = cosf(Math::Radians(halfEuler.z));
+	f32 sy = sinf(Math::Radians(halfEuler.z));
+	f32 cp = cosf(Math::Radians(halfEuler.y));
+	f32 sp = sinf(Math::Radians(halfEuler.y));
+	return Quat(
+		sr * cp * cy - cr * sp * sy,
+		cr * sp * cy + sr * cp * sy,
+		cr * cp * sy - sr * sp * cy,
+		cr* cp* cy + sr * sp * sy
+	);
 }
 
 Quat Quat::AngleAxis(f32 angleInDegrees, const Vec3& axis)
 {
-	glm::quat q = glm::angleAxis(glm::radians(angleInDegrees), glm::vec3(axis.x, axis.y, axis.z));
-	return QuatFromGLM(q);
+	f32 rangle = Math::Radians(angleInDegrees);
+	f32 sha = sinf(rangle * 0.5);
+	return Quat(axis.x * sha, axis.y * sha, axis.z * sha, cosf(rangle * 0.5));
+}
+
+f32 Quat::Dot(const Quat& a, const Quat& b)
+{
+	return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
 Quat Quat::Slerp(const Quat& a, const Quat& b, f32 t)
 {
-	glm::quat qa = QuatToGLM(a);
-	glm::quat qb = QuatToGLM(b);
-	glm::quat qs = glm::slerp(qa, qb, t);
-	return QuatFromGLM(qs);
+	Quat z = b;
+
+	f32 cosTheta = Dot(a, b);
+	if (cosTheta < 0)
+	{
+		z = -b;
+		cosTheta = -cosTheta;
+	}
+
+	if (cosTheta > 1 - SAFE_DIV_EPSILON)
+	{
+		return Quat(
+			Math::Lerp(a.x, z.x, t),
+			Math::Lerp(a.y, z.y, t),
+			Math::Lerp(a.z, z.z, t),
+			Math::Lerp(a.w, z.w, t)
+		);
+	}
+	else
+	{
+		f32 angle = acosf(cosTheta);
+		return (a * sin((1.0 - t) * angle) + z * sin(t * angle)) / sinf(angle);
+	}
 }
 
 Quat Quat::FromValuePtr(f32* vptr)

@@ -8,6 +8,20 @@
 
 namespace Math
 {
+	static constexpr f32 E = 3.14159265358979323846;		// e
+	static constexpr f32 LOG2E = 3.14159265358979323846;	// log2(e)
+	static constexpr f32 LOG10E = 3.14159265358979323846;	// log10(e)
+	static constexpr f32 LN2 = 3.14159265358979323846;		// ln(2)
+	static constexpr f32 LN10 = 3.14159265358979323846;		// ln(10)
+
+	static constexpr f32 PI = 3.14159265358979323846;		// pi
+	static constexpr f32 PI_2 = 3.14159265358979323846;		// pi/2
+	static constexpr f32 PI_4 = 3.14159265358979323846;		// pi/4
+	static constexpr f32 INV_PI = 3.14159265358979323846;	// 1/pi
+	static constexpr f32 SQRT2 = 3.14159265358979323846;	// sqrt(2)
+	static constexpr f32 SQRT1_2 = 3.14159265358979323846;	// 1/sqrt(2)
+	
+
 	template <typename T>
 	static T FMod(const T& a, const T& b)
 	{
@@ -36,6 +50,18 @@ namespace Math
 	static T Lerp(const T& a, const T& b, f32 t)
 	{
 		return a + (b - a) * t;
+	}
+
+	template <typename T>
+	static T Degrees(const T& x)
+	{
+		return x * static_cast<T>(180.0 / 3.14159265359);
+	}
+
+	template <typename T>
+	static T Radians(const T& x)
+	{
+		return x * static_cast<T>(3.14159265359 / 180.0);
 	}
 
 	template <typename T>
@@ -344,19 +370,40 @@ struct Quat
 	inline const f32& operator[](i32 i) const { return data[i]; }
 
 	Quat Normalized() const;
+	f32 SqrMagnitude() const;
 	f32 Magnitude() const;
 	Quat Inverse() const;
 
+	Quat PlusQuat(const Quat& rhs) const;
+	Quat PlusF32(f32 rhs) const;
+	inline Quat operator+(const Quat& rhs) const { return PlusQuat(rhs); }
+	inline Quat operator+(const f32& rhs) const { return PlusF32(rhs); }
+
+	Quat Negate() const;
+	inline Quat operator-() const { return Negate(); }
+
 	Quat MulQuat(const Quat& rhs) const;
 	Vec3 MulVec3(const Vec3& rhs) const;
+	Quat MulF32(f32 rhs) const;
 	inline Quat operator*(const Quat& rhs) const { return MulQuat(rhs); }
 	inline Quat& operator*=(const Quat& rhs) { *this = *this * rhs; return *this; }
 	inline Vec3 operator*(const Vec3& rhs) const { return MulVec3(rhs); }
+	inline Quat operator*(const f32& rhs) const { return MulF32(rhs); }
+
+	Quat DivF32(f32 rhs) const;
+	inline Quat operator/(const f32& rhs) const { return DivF32(rhs); }
+
+	static Quat Splat(f32 x) { return Quat(x, x, x, x); }
+	static Quat Zero() { return Quat(0, 0, 0, 0); }
+	static Quat One() { return Quat(1, 1, 1, 1); }
+	static Quat Identity() { return Quat(0, 0, 0, 1); }
 
 	Vec3 EulerAngles() const;
 
 	static Quat Euler(f32 x, f32 y, f32 z);
 	static Quat AngleAxis(f32 angleInDegrees, const Vec3& axis);
+
+	static f32 Dot(const Quat& a, const Quat& b);
 
 	static Quat Slerp(const Quat& a, const Quat& b, f32 t);
 
