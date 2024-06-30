@@ -553,28 +553,56 @@ Quat Quat::Slerp(const Quat& a, const Quat& b, f32 t)
 
 Quat Quat::FromMat4(const Mat4& _matrix)
 {
-	Mat4 matrix = _matrix.Transpose();
-	f32 tr = matrix[0] + matrix[5] + matrix[10];
-	if (tr > 0) {
-		f32 S = sqrtf(tr + 1.0) * 2.0;
-		return Quat((matrix(2, 1) - matrix(1, 2)) / S, (matrix(0, 2) - matrix(2, 0)) / S,
-			(matrix(1, 0) - matrix(0, 1)) / S, 0.25 * S);
+	glm::mat4 matrix = glm::make_mat4(_matrix.data);
+	glm::vec3 scale;
+	glm::quat rotation;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::decompose(matrix, scale, rotation, translation, skew, perspective);
+	return QuatFromGLM(rotation);
+
+	// TODO: why does this break the gauntlet game?? (used in Mat4::Decompose)
+	// Source: https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/#google_vignette
+	/*Quat q;
+	Mat4 a = _matrix.Transpose();
+	float trace = a(0, 0) + a(1, 1) + a(2, 2);
+	if (trace > 0.0)
+	{
+		float s = 0.5f / sqrtf(trace + 1.0f);
+		q.w = 0.25f / s;
+		q.x = (a(2, 1) - a(1, 2)) * s;
+		q.y = (a(0, 2) - a(2, 0)) * s;
+		q.z = (a(1, 0) - a(0, 1)) * s;
 	}
-	else if (matrix(0, 0) > matrix(1, 1) && matrix(0, 0) > matrix(2, 2)) {
-		f32 S = sqrtf(1.0 + matrix(0, 0) - matrix(1, 1) - matrix(2, 2)) * 2.0;
-		return Quat(0.25 * S, (matrix(0, 1) + matrix(1, 0)) / S,
-			(matrix(0, 2) + matrix(2, 0)) / S, (matrix(2, 1) - matrix(1, 2)) / S);
+	else
+	{
+		if (a(0, 0) > a(1, 1) && a(0, 0) > a(2, 2))
+		{
+			float s = 2.0f * sqrtf(1.0f + a(0, 0) - a(1, 1) - a(2, 2));
+			q.w = (a(2, 1) - a(1, 2)) / s;
+			q.x = 0.25f * s;
+			q.y = (a(0, 1) + a(1, 0)) / s;
+			q.z = (a(0, 2) + a(2, 0)) / s;
+		}
+		else if (a(1, 1) > a(2, 2))
+		{
+			float s = 2.0f * sqrtf(1.0f + a(1, 1) - a(0, 0) - a(2, 2));
+			q.w = (a(0, 2) - a(2, 0)) / s;
+			q.x = (a(0, 1) + a(1, 0)) / s;
+			q.y = 0.25f * s;
+			q.z = (a(1, 2) + a(2, 1)) / s;
+		}
+		else
+		{
+			float s = 2.0f * sqrtf(1.0f + a(2, 2) - a(0, 0) - a(1, 1));
+			q.w = (a(1, 0) - a(0, 1)) / s;
+			q.x = (a(0, 2) + a(2, 0)) / s;
+			q.y = (a(1, 2) + a(2, 1)) / s;
+			q.z = 0.25f * s;
+		}
 	}
-	else if (matrix(1, 1) > matrix(2, 2)) {
-		f32 S = sqrtf(1.0 + matrix(1, 1) - matrix(0, 0) - matrix(2, 2)) * 2.0;
-		return Quat((matrix(0, 1) + matrix(1, 0)) / S, 0.25 * S,
-			(matrix(1, 2) + matrix(2, 1)) / S, (matrix(0, 2) - matrix(2, 0)) / S);
-	}
-	else {
-		f32 S = sqrtf(1.0 + matrix(2, 2) - matrix(0, 0) - matrix(1, 1)) * 2.0;
-		return Quat((matrix(0, 2) + matrix(2, 0)) / S,
-			(matrix(1, 2) + matrix(2, 1)) / S, 0.25 * S, (matrix(1, 0) - matrix(0, 1)) / S);
-	}
+	return q;*/
 }
 
 Quat Quat::FromValuePtr(f32* vptr)
@@ -837,15 +865,15 @@ Mat4 Mat4::Rotation(const Quat& rotation)
 {
 	Mat4 result = Mat4::Identity();
 	result[0] = 1.0 - 2.0 * rotation.y * rotation.y - 2.0 * rotation.z * rotation.z;
-	result[1] = 2.0 * rotation.x * rotation.y - 2.0 * rotation.w * rotation.z;
-	result[2] = 2.0 * rotation.x * rotation.z + 2.0 * rotation.w * rotation.y;
-	result[4] = 2.0 * rotation.x * rotation.y + 2.0 * rotation.w * rotation.z;
+	result[4] = 2.0 * rotation.x * rotation.y - 2.0 * rotation.w * rotation.z;
+	result[8] = 2.0 * rotation.x * rotation.z + 2.0 * rotation.w * rotation.y;
+	result[1] = 2.0 * rotation.x * rotation.y + 2.0 * rotation.w * rotation.z;
 	result[5] = 1.0 - 2.0 * rotation.x * rotation.x - 2.0 * rotation.z * rotation.z;
-	result[6] = 2.0 * rotation.y * rotation.z - 2.0 * rotation.w * rotation.x;
-	result[8] = 2.0 * rotation.x * rotation.z - 2.0 * rotation.w * rotation.y;
-	result[9] = 2.0 * rotation.y * rotation.z + 2.0 * rotation.w * rotation.x;
+	result[9] = 2.0 * rotation.y * rotation.z - 2.0 * rotation.w * rotation.x;
+	result[2] = 2.0 * rotation.x * rotation.z - 2.0 * rotation.w * rotation.y;
+	result[6] = 2.0 * rotation.y * rotation.z + 2.0 * rotation.w * rotation.x;
 	result[10] = 1.0 - 2.0 * rotation.x * rotation.x - 2.0 * rotation.y * rotation.y;
-	return result.Transpose();
+	return result;
 }
 
 Mat4 Mat4::Scale(const Vec3& scale)
@@ -864,17 +892,6 @@ Mat4 Mat4::TRS(const Vec3& translation, const Quat& rotation, const Vec3& scale)
 
 void Mat4::Decompose(const Mat4& matrix, Vec3& pos, Quat& rot, Vec3& scl)
 {
-	glm::mat4 transformation = glm::make_mat4(matrix.data);
-	glm::vec3 scale;
-	glm::quat rotation;
-	glm::vec3 translation;
-	glm::vec3 skew;
-	glm::vec4 perspective;
-	glm::decompose(transformation, scale, rotation, translation, skew, perspective);
-	pos = Vec3::FromValuePtr(glm::value_ptr(translation));
-	rot = QuatFromGLM(rotation);
-	scl = Vec3::FromValuePtr(glm::value_ptr(scale));
-
 	pos = Vec3(matrix.columns[3][0], matrix.columns[3][1], matrix.columns[3][2]);
 	rot = Quat::FromMat4(matrix);
 	scl = Vec3(
